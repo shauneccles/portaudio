@@ -480,7 +480,7 @@ typedef struct PaWasapiDeviceInfo
     EndpointFormFactor formFactor;
 
 	// Loopback indicator
-	int loopBack;
+	boolean loopBackDevice;
 }
 PaWasapiDeviceInfo;
 
@@ -2139,7 +2139,7 @@ static PaDeviceInfo *AddLoopbacksToDeviceList(PaWasapiHostApiRepresentation *paW
     }
     memcpy(newDevInfo, paWasapi->devInfo, sizeof(PaWasapiDeviceInfo) * deviceCount);
     memcpy(newDevInfo + deviceCount, &paWasapi->devInfo[loopbackindex], sizeof(paWasapi->devInfo));
-    newDevInfo[deviceCount].loopBack = 1;
+    newDevInfo[deviceCount].loopBackDevice = TRUE;
     if ((paWasapi->devInfo = (PaWasapiDeviceInfo *)PaUtil_GroupAllocateMemory(paWasapi->allocations,
         sizeof(PaWasapiDeviceInfo) * (deviceCount + 1))) == NULL)
     {
@@ -2333,7 +2333,7 @@ static PaError CreateDeviceList(PaWasapiHostApiRepresentation *paWasapi, PaHostA
                 result = paInsufficientMemory;
                 goto error;
             }
-            paWasapi->devInfo[paWasapi->deviceCount].loopBack = 1;
+            paWasapi->devInfo[paWasapi->deviceCount].loopBackDevice = TRUE;
             ++hostApi->info.deviceCount;
             ++paWasapi->deviceCount;
         }
@@ -2743,7 +2743,7 @@ int PaWasapi_IsLoopback( PaDeviceIndex nDevice )
 	if ((UINT32)index >= paWasapi->deviceCount)
 		return paInvalidDevice;
 
-	return paWasapi->devInfo[ index ].loopBack;
+	return paWasapi->devInfo[ index ].loopBackDevice;
 }
 
 // ------------------------------------------------------------------------------------------
@@ -3965,7 +3965,8 @@ static PaError OpenStream( struct PaUtilHostApiRepresentation *hostApi,
             (stream->in.shareMode == AUDCLNT_SHAREMODE_SHARED) &&
             ((inputStreamInfo != NULL) && (inputStreamInfo->flags & paWinWasapiAutoConvert)))
             stream->in.streamFlags |= (AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY);
-        if (info->flow == eRender)
+        // If the device is a loopback device, we must use the AUDCLNT_STREAMFLAGS_LOOPBACK flag.
+        if (info->loopBackDevice == TRUE)
             stream->in.streamFlags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
         // Fill parameters for Audio Client creation
         stream->in.params.device_info       = info;
