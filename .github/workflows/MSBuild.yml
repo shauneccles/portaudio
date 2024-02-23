@@ -48,13 +48,8 @@ jobs:
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} /p:Platform=${{matrix.BUILD_PLATFORM}} ${{env.VCXPROJ_FILE_PATH}}
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: portaudio
-        path: ./msvc/Release/
     - name: Upload dll
       uses: actions/upload-artifact@v2
       with:
         name: portaudio_dll
-        path: ./msvc/Release/portaudio_x64.dll
+        path: ./msvc/x64/Release/portaudio_x64.dll
